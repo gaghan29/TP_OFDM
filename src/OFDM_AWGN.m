@@ -15,6 +15,8 @@ cstl = exp(1j*2*pi*(0:M-1)/M);
 N = 128; % Nb de sous porteuses
 K = 500; % Nb de symboles par sous-porteuses
 
+nb_classes = 100;
+
 % Paramètres bruit blanc
 sigma = 0;
 
@@ -31,6 +33,7 @@ S_ifft = ifft(S_reshaped, N, 1)*sqrt(N);
 % Multiplexage (Permet de passer à des signaux en série)
 x = S_ifft(:).'; 
 
+% Affichage constélation de l'emetteur 
 figure;
 %plot(real(x));
 plot(S);
@@ -58,12 +61,12 @@ S_fft = fft(R_reshaped, N, 1)/sqrt(N);
 % Multiplexage (Permet de passer à des signaux en série)
 S_recieved = S_fft(:).'; % Symboles reçus
 
-
+% Affichage constélation de l'emetteur
 figure;
 plot(S_recieved);
 grid on;
 
-%% Bloc de réception
+%% Bloc de décision
 S_decode = zeros(1, K*N);    % vecteur ligne
 
 for i= 1:(K*N)
@@ -77,4 +80,22 @@ end
 
 %% TEB (Taux d'erreur binaire)
 TEB = sum(S_decode ~= idx)/(K*N);
+
+%% Histogrammes
+
+% Histogramme partie réelle trame OFDM
+figure;
+histogram(real(x),nb_classes);
+xlabel('Symbole');
+ylabel('Nombre');
+title('Histogramme partie réelle trame OFDM');
+grid on;
+
+% Histogramme partie imaginaire trame OFDM
+figure;
+histogram(imag(x),nb_classes);
+xlabel('Symbole');
+ylabel('Nombre');
+title('Histogramme partie imaginaire trame OFDM');
+grid on;
 
