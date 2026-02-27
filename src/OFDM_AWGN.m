@@ -99,3 +99,45 @@ ylabel('Nombre');
 title('Histogramme partie imaginaire trame OFDM');
 grid on;
 
+
+%% Fonctions d'autocorélation
+trame_OFDM = x;
+
+[R_real, lags_real]= xcorr(real(trame_OFDM), 'biased');
+[R_imag, lags_imag] = xcorr(imag(trame_OFDM), 'biased');
+
+[R_inter, lags_inter] = xcorr(real(trame_OFDM), imag(trame_OFDM), 'biased');
+
+% Normalisation et passage en échelle log
+R_real = abs(R_real)/max(R_real);
+R_realdB = 10*log10(R_real + 1e-10);
+
+R_imag = abs(R_imag)/max(R_imag);
+R_imagdB = 10*log10(R_imag + 1e-10);
+
+R_inter = abs(R_inter)/max(R_inter);
+R_interdB = 10*log10(R_inter + 1e-10);
+
+figure;
+subplot(3,1,1)
+grid on;
+plot(lags_real, R_realdB, 'r');
+xlabel('Lags')
+ylabel('Autocorrélation normalisé (dB)')
+title('Autocorrélation normalisé de la partie réelle')
+
+subplot(3,1,2)
+grid on;
+plot(lags_imag, R_imagdB, 'g');
+xlabel('Lags')
+ylabel('Autocorrélation normalisé (dB)')
+title('Autocorrélation normalisé de la partie imaginaire')
+
+subplot(3,1,3)
+grid on;
+plot(lags_inter, R_interdB, 'b');
+xlabel('Lags')
+ylabel('Autocorrélation normalisé (dB)')
+title('Intercorrélation normalisé de la partie réelle et imaginaire')
+
+
