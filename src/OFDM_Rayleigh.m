@@ -6,7 +6,7 @@ close all
 
 % Chaine de communication OFDM (Wifi, 4G, 4G Edge, 5G, ...)
 
-% Version sans intervalle de garde
+% Version avec intervalle de garde
 
 %% Paramètres
 M = 2; % BPSK
@@ -47,11 +47,12 @@ grid on;
 %% Canal 
 
 % Fonction de transfert du canal (Canal complexe de variance 1/L)
-%h=1; %Pour tester que le TEB = 0 couplé a sigma = 0
+%h=1; %Pour tester que le TEB = 0 couplé à sigma = 0, question (3.2.2)
 h = sqrt(1/(2*L)) * (randn(1,L) + 1j*randn(1,L));
 
 % Convolution du signal avec la réponse impulsionnelle du canal
-x_canal = conv(x, h, 'same');
+x_canal = conv(x, h);
+x_canal = x_canal(1:length(x));
 
 % Génération d'un bruit blanc Gaussien
 bruit_blanc = randn(1, (N+L)*K) * sqrt(sigma);
@@ -71,14 +72,18 @@ R_sansPrefix = R_reshaped(L+1:end, :); % Matrice sans prefixe cyclique
 % Bloc FFT pour la démodulation
 S_fft = fft(R_sansPrefix, N, 1)/sqrt(N);
 
+% Egalistation/Forcage à zéro
+H = fft(h,N).';
+S_estime = S_fft ./ H;
+
 % Multiplexage (Permet de passer à des signaux en série)
-S_recieved = S_fft(:).'; % Symboles reçus
+S_recieved = S_estime(:).'; % Symboles reçus
 
 % Affichage constélation de l'emetteur
 figure;
 plot(S_recieved);
 grid on;
-
+    
 %% Bloc de décision
 S_decode = zeros(1, K*N);    % vecteur ligne
 
@@ -111,46 +116,3 @@ xlabel('Symbole');
 ylabel('Nombre');
 title('Histogramme partie imaginaire trame OFDM');
 grid on;
-
-
-% %% Fonctions d'autocorélation
-% trame_OFDM = x;
-% 
-% [R_real, lags_real]= xcorr(real(trame_OFDM), 'biased');
-% [R_imag, lags_imag] = xcorr(imag(trame_OFDM), 'biased');
-% 
-% [R_inter, lags_inter] = xcorr(real(trame_OFDM), imag(trame_OFDM), 'biased');
-% 
-% % Normalisation et passage en échelle log
-% R_real = abs(R_real)/max(R_real);
-% R_realdB = 10*log10(R_real + 1e-10);
-% 
-% R_imag = abs(R_imag)/max(R_imag);
-% R_imagdB = 10*log10(R_imag + 1e-10);
-% 
-% R_inter = abs(R_inter)/max(R_inter);
-% R_interdB = 10*log10(R_inter + 1e-10);
-% 
-% figure;
-% subplot(3,1,1)
-% grid on;
-% plot(lags_real, R_realdB, 'r');
-% xlabel('Lags')
-% ylabel('Autocorrélation normalisé (dB)')
-% title('Autocorrélation normalisé de la partie réelle')
-% 
-% subplot(3,1,2)
-% grid on;
-% plot(lags_imag, R_imagdB, 'g');
-% xlabel('Lags')
-% ylabel('Autocorrélation normalisé (dB)')
-% title('Autocorrélation normalisé de la partie imaginaire')
-% 
-% subplot(3,1,3)
-% grid on;
-% plot(lags_inter, R_interdB, 'b');
-% xlabel('Lags')
-% ylabel('Autocorrélation normalisé (dB)')
-% title('Intercorrélation normalisé de la partie réelle et imaginaire')
-
-
