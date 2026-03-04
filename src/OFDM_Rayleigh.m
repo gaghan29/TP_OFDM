@@ -19,7 +19,7 @@ nb_classes = 100;
 L = 16; % Longueur du préfixe cyclique
 
 % Paramètres bruit blanc
-sigma = 0;
+sigma = 0.1;
 
 %% Emetteur 
 idx = randi([0, M-1], 1, K*N);
@@ -37,12 +37,6 @@ Sn_Prefixced = [S_Prefixced; S_ifft];
 
 % Multiplexage (Permet de passer à des signaux en série)
 x = Sn_Prefixced(:).';
-
-% Affichage constélation de l'emetteur 
-figure;
-%plot(real(x));
-plot(S);
-grid on;
 
 %% Canal 
 
@@ -79,11 +73,6 @@ S_estime = S_fft ./ H;
 % Multiplexage (Permet de passer à des signaux en série)
 S_recieved = S_estime(:).'; % Symboles reçus
 
-% Affichage constélation de l'emetteur
-figure;
-plot(S_recieved);
-grid on;
-    
 %% Bloc de décision
 S_decode = zeros(1, K*N);    % vecteur ligne
 
@@ -99,7 +88,30 @@ end
 %% TEB (Taux d'erreur binaire)
 TEB = sum(S_decode ~= idx)/(K*N);
 
-%% Histogrammes
+%% Affichages
+
+% Constellations
+
+% Affichage constellation côté émetteur 
+figure;
+plot(real(S), imag(S), 'o');
+xlabel('Partie réelle');
+ylabel('Partie imaginaire');
+ylim([-1.5;1.5]);
+title('Constellation BPSK - Emetteur');
+axis equal;
+grid on;
+
+% Affichage constellation côté récepteur 
+figure;
+plot(real(S_recieved), imag(S_recieved), 'o');
+xlabel('Partie réelle');
+ylabel('Partie imaginaire');
+title('Constellation BPSK - Recepteur');
+axis equal;
+grid on;
+
+% Histogrammes
 
 % Histogramme partie réelle trame OFDM
 figure;

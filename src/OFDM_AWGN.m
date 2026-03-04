@@ -18,7 +18,7 @@ K = 500; % Nb de symboles par sous-porteuses
 nb_classes = 100;
 
 % Paramètres bruit blanc
-sigma = 0;
+sigma = 0.1;
 
 %% Emetteur 
 idx = randi([0, M-1], 1, K*N);
@@ -33,14 +33,7 @@ S_ifft = ifft(S_reshaped, N, 1)*sqrt(N);
 % Multiplexage (Permet de passer à des signaux en série)
 x = S_ifft(:).'; 
 
-% Affichage constélation de l'emetteur 
-figure;
-%plot(real(x));
-plot(S);
-grid on;
-
 %% Canal 
-
 
 % Génération d'un bruit blanc Gaussien
 bruit_blanc = randn(1, N*K) * sqrt(sigma);
@@ -61,11 +54,6 @@ S_fft = fft(R_reshaped, N, 1)/sqrt(N);
 % Multiplexage (Permet de passer à des signaux en série)
 S_recieved = S_fft(:).'; % Symboles reçus
 
-% Affichage constélation de l'emetteur
-figure;
-plot(S_recieved);
-grid on;
-
 %% Bloc de décision
 S_decode = zeros(1, K*N);    % vecteur ligne
 
@@ -81,7 +69,30 @@ end
 %% TEB (Taux d'erreur binaire)
 TEB = sum(S_decode ~= idx)/(K*N);
 
-%% Histogrammes
+%% Affichages
+
+% Constellations
+
+% Affichage constellation côté émetteur 
+figure;
+plot(real(S), imag(S), 'o');
+xlabel('Partie réelle');
+ylabel('Partie imaginaire');
+ylim([-1.5;1.5]);
+title('Constellation BPSK - Emetteur');
+axis equal;
+grid on;
+
+% Affichage constellation côté récepteur 
+figure;
+plot(real(S_recieved), imag(S_recieved), 'o');
+xlabel('Partie réelle');
+ylabel('Partie imaginaire');
+title('Constellation BPSK - Recepteur');
+axis equal;
+grid on;
+
+%Histogrammes
 
 % Histogramme partie réelle trame OFDM
 figure;
