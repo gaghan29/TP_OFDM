@@ -11,9 +11,11 @@ cstl = exp(1j*2*pi*(0:M-1)/M);
 N = 128; % Nb de sous porteuses
 K = 500; % Nb de symboles par sous-porteuses
 
+L = 16; % Longueur du préfixe cyclique
+
 % Paramètre SNR
-SNR_dB = 0:1:10; %Eb/N0 en dB
-TEB_sim = zeros(size(SNR_dB)); %Pour collecter les 10 erreurs binaires
+SNR_dB = 0:1:15; %Eb/N0 en dB
+TEB_sim = zeros(size(SNR_dB)); %Pour collecter les 15 erreurs binaires
 
 
 %% Main
@@ -33,31 +35,49 @@ for i = 1:length(SNR_dB)
         
         % Bloc IFFT pour la modulation
         S_ifft = ifft(S_reshaped, N, 1)*sqrt(N);
-        
-        % Multiplexage (Permet de passer à des signaux en série)
-        x = S_ifft(:).'; 
 
+        % Insertion préfixe cylclique
+        S_Prefixced = S_ifft(N-L+1:end,:); 
+        Sn_Prefixced = [S_Prefixced; S_ifft];
+
+        % Multiplexage (Permet de passer à des signaux en série) 
+        x = Sn_Prefixced(:).';
 
         %% Canal 
 
+        % Fonction de transfert du canal (Canal complexe de variance 1/L)
+        h = sqrt(1/(2*L)) * (randn(1,L) + 1j*randn(1,L));
+        
+        % Convolution du signal avec la réponse impulsionnelle du canal
+        x_canal = conv(x, h);
+        x_canal = x_canal(1:length(x));
+
         % Génération d'un bruit blanc Gaussien
         sigma_bruit = 1 / (10^(SNR_dB(i)/10)); % Valeur de sigma_bruit en fonction de la valeur du SNR (dB)
-        bruit_blanc = randn(1, N*K) * sqrt(sigma_bruit);
+        % On suppose que sigma_symbole^2E[|H(n)|^2] = 1
+        bruit_blanc = randn(1, (N+L)*K) * sqrt(sigma_bruit);
         
         % Signal bruité
-        x_bruite = x + bruit_blanc;
+        x_bruite = x_canal + bruit_blanc;
 
         %% Récepteur
         % Signal recu en série
         
         % Démultiplexage (Passage d'un signal série à un signal parallèle)
-        R_reshaped = reshape(x_bruite, N, K);
+        R_reshaped = reshape(x_bruite, (N+L), K);
+        
+        % On enleve le préfixe cyclique
+        R_sansPrefix = R_reshaped(L+1:end, :); % Matrice sans prefixe cyclique
         
         % Bloc FFT pour la démodulation
-        S_fft = fft(R_reshaped, N, 1)/sqrt(N);
-        
+        S_fft = fft(R_sansPrefix, N, 1)/sqrt(N);
+
+        % Egalistation/Forcage à zéro
+        H = fft(h,N).';
+        S_estime = S_fft ./ H;
+
         % Multiplexage (Permet de passer à des signaux en série)
-        S_recieved = S_fft(:).'; % Symboles reçus
+        S_recieved = S_estime(:).'; % Symboles reçus
         
         %% Bloc de décision
         S_decode = zeros(1, K*N); % vecteur ligne
@@ -83,11 +103,11 @@ end
 
 %% Affichages
 
-%% Courbe théorique (modulation binaire -> Q-function)
+% Courbe théorique (modulation binaire -> Q-function)
 SNR_theo = 10.^(SNR_dB/10);
-TEB_theo = 0.5 * erfc(sqrt(SNR_theo));
+TEB_theo = berfading(SNR_dB,'psk',2,1);
 
-%% Tracé
+% Tracé
 figure;
 semilogy(SNR_dB, TEB_theo, 'r--', 'LineWidth', 2, 'DisplayName', 'Théorie');
 hold on;
