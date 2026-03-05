@@ -19,7 +19,7 @@ nb_classes = 100;
 L = 16; % Longueur du préfixe cyclique
 
 % Paramètres bruit blanc
-sigma = 0.1;
+sigma = 0;
 
 %% Emetteur 
 idx = randi([0, M-1], 1, K*N);
@@ -90,9 +90,8 @@ TEB = sum(S_decode ~= idx)/(K*N);
 
 %% Affichages
 
-% Q.1 tracé du module du spectre 
+% Module du spectre de la RI
 L = 4;
-nb_real = 100;
 
 figure; 
 hold on; 
@@ -147,3 +146,26 @@ xlabel('Symbole');
 ylabel('Nombre');
 title('Histogramme partie imaginaire trame OFDM');
 grid on;
+
+% Module et phase de h
+L = 16;
+h = sqrt(1/(2*L)) * (randn(1,L) + 1j*randn(1,L));
+H = fft(h,N);
+
+H_mod = abs(H);
+H_phase = atan2(imag(H), real(H))*180/pi;
+
+figure;
+subplot(2,1,1);
+plot(H_mod)
+title('Module de H[k] pour L = 16');
+ylabel('Module de H');
+grid on; 
+
+subplot(2,1,2);
+plot(H_phase)
+ylabel('Phase (°)'); 
+xlabel('Indice de sous-porteuse k');
+title('Phase de H en degré');
+grid on; 
+
