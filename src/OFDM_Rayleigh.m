@@ -90,6 +90,25 @@ TEB = sum(S_decode ~= idx)/(K*N);
 
 %% Affichages
 
+% Q.1 tracé du module du spectre 
+L = 4;
+nb_real = 100;
+
+figure; 
+hold on; 
+for i=1:4
+    h = sqrt(1/(2*L)) * (randn(1,L) + 1j*randn(1,L));
+    H = abs(fft(h, N));
+    plot(20*log10(H), LineWidth=1.2);
+    L = L * 2;
+end
+
+title('Tracé du module du spectre de la RI de h');
+xlabel('Indice de la sous-porteuse');
+ylabel('Magnitude (dB)');
+legend('L=4', 'L=8', 'L=16', 'L=32', 'Location', 'best');
+grid on;
+
 % Constellations
 
 % Affichage constellation côté émetteur 
