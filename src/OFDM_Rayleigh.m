@@ -147,7 +147,7 @@ ylabel('Nombre');
 title('Histogramme partie imaginaire trame OFDM');
 grid on;
 
-% Module et phase de h
+% Module et phase de la fft de h
 L = 16;
 h = sqrt(1/(2*L)) * (randn(1,L) + 1j*randn(1,L));
 H = fft(h,N);

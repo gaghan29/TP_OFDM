@@ -65,6 +65,29 @@ for i= 1:(K*N)
     end
 end
 
+%% Fonctions d'autocorélations
+trame_OFDM = x;
+
+[R_real, lags_real]= xcorr(real(trame_OFDM), 'biased');
+[R_imag, lags_imag] = xcorr(imag(trame_OFDM), 'biased');
+
+[R_inter, lags_inter] = xcorr(real(trame_OFDM), imag(trame_OFDM), 'biased');
+
+% Normalisation et passage en échelle log
+R_real = abs(R_real)/max(R_real);
+R_realdB = 10*log10(R_real + 1e-10);
+
+R_imag = abs(R_imag)/max(R_imag);
+R_imagdB = 10*log10(R_imag + 1e-10);
+
+R_inter = abs(R_inter)/max(R_inter);
+R_interdB = 10*log10(R_inter + 1e-10);
+
+%% DSP du signal Welch overlap = 0
+NFFT = N;
+%NFFT = 16*N;   % choisir une des deux valeurs pour observer des différences
+DSP_bartlett = bartlett(trame_OFDM, NFFT);
+DSP_welch = welch(trame_OFDM, NFFT, 0);
 
 %% TEB (Taux d'erreur binaire)
 TEB = sum(S_decode ~= idx)/(K*N);
@@ -110,24 +133,7 @@ ylabel('Nombre');
 title('Histogramme partie imaginaire trame OFDM');
 grid on;
 
-
-%% Fonctions d'autocorélation
-trame_OFDM = x;
-
-[R_real, lags_real]= xcorr(real(trame_OFDM), 'biased');
-[R_imag, lags_imag] = xcorr(imag(trame_OFDM), 'biased');
-
-[R_inter, lags_inter] = xcorr(real(trame_OFDM), imag(trame_OFDM), 'biased');
-
-% Normalisation et passage en échelle log
-R_real = abs(R_real)/max(R_real);
-R_realdB = 10*log10(R_real + 1e-10);
-
-R_imag = abs(R_imag)/max(R_imag);
-R_imagdB = 10*log10(R_imag + 1e-10);
-
-R_inter = abs(R_inter)/max(R_inter);
-R_interdB = 10*log10(R_inter + 1e-10);
+% Fonctions d'autocorrélations
 
 figure;
 subplot(3,1,1)
@@ -150,5 +156,29 @@ plot(lags_inter, R_interdB, 'b');
 xlabel('Lags')
 ylabel('Autocorrélation normalisé (dB)')
 title('Intercorrélation normalisé de la partie réelle et imaginaire')
+
+% DSP
+f = (0:NFFT-1)/NFFT; % Fréquence normalisée entre 0 et 1
+
+figure;
+subplot(2,1,1);
+plot(DSP_bartlett, 'r', LineWidth=1.2);
+grid on;
+xlabel('Sous-porteuse');
+ylabel('DSP');
+title('Estimation de la DSP par la méthode de Bartlett');
+legend('Bartlett');
+
+subplot(2,1,2);
+plot(DSP_welch, 'g', LineWidth=1.2);
+grid on;
+xlabel('Sous-porteuse');
+ylabel('DSP');
+title('Estimation de la DSP par la méthode de Welch');
+legend('Welch');
+
+
+
+
 
 
